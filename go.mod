@@ -1,4 +1,4 @@
-module github.com/nicokosi/gh-collab-o-meter
+module github.com/nicokosi/gh-collab-scanner
 
 go 1.17
 
