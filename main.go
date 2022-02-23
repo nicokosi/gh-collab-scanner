@@ -64,7 +64,7 @@ func main() {
 		&readme)
 
 	if len(readme.Name) > 0 {
-		fmt.Printf("  - has a README ☑️\n")
+		fmt.Printf("  - a README ☑️\n")
 	} else if strings.HasPrefix(errReadme.Error(), "HTTP 404: Not Found") {
 		fmt.Printf("  - no README 😇\n")
 	} else {
