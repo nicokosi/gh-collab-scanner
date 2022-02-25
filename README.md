@@ -18,30 +18,23 @@ gh collab-scanner
 
 will display something like:
 
-```
-(current repo)
-Repository nicokosi/gh-collab-scanner has:
-  - a description ☑️
-  - no README 😇
-  - no topics 😇
-  - 1 collaborator 👤
-  - a community profile score of 16 💯
-```
+  (current repo)
+  Repo nicokosi/gh-collab-scanner has: description ☑️, README ☑️, topics ☑️, 1 collaborator 👤, community profile score: 33 💯
 
 For any GitHub repository via its full name `org`/`repo` (i.e. python/peps)
 
 ```sh
-gh collab-scanner python/peps
+gh collab-scanner --repo python/peps
 ```
 
 will display something like:
 
-```
-Repository python/peps has:
-  - a description ☑️
-  - has a README ☑️
-  - no topics 😇
-  - a community profile score of 71 💯
+  Repo python/peps has: description ☑️, README ☑️, no topics 😇, community profile score: 71 💯
+
+Need help? Run:
+
+```sh
+gh-collab-scanner --help
 ```
 
 ## Build/install from source code
