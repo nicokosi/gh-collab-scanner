@@ -1,19 +1,34 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"os"
 	"strings"
+
 	"github.com/cli/go-gh"
 )
 
-func main() {
+type config struct {
+	repo    string
+	verbose bool
+}
 
+func parseFlags() config {
+	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted")
+	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
+	flag.Parse()
+	return config{*repo, *verbose}
+}
+
+func main() {
 	var repoWithOrg = ""
-	if len(os.Args) > 1 {
-		repoWithOrg = os.Args[1]
+	config := parseFlags()
+	if len(config.repo) > 1 {
+		repoWithOrg = config.repo
 	} else {
-		fmt.Printf("(current repo)\n")
+		if config.verbose {
+			fmt.Printf("(current repo)\n")
+		}
 		currentRepo, _ := gh.CurrentRepository()
 		repoWithOrg = currentRepo.Owner() + "/" + currentRepo.Name()
 	}
@@ -25,10 +40,6 @@ func main() {
 	}
 	user := struct{ Login string }{}
 	err = client.Get("user", &user)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 
 	// https://docs.github.com/en/rest/reference/repos#get-a-repository
 	type Owner struct{ Login string }
@@ -47,11 +58,24 @@ func main() {
 		fmt.Println(err2)
 		return
 	}
-	fmt.Printf("Repository %s has:\n", repoWithOrg)
-	if len(repo.Description) > 0 {
-		fmt.Printf("  - a description ☑️\n")
+	if config.verbose {
+		fmt.Printf("Repository %s has:\n", repoWithOrg)
 	} else {
-		fmt.Printf("  - no description 😇\n")
+		fmt.Printf("Repo %s has: ", repoWithOrg)
+	}
+
+	if len(repo.Description) > 0 {
+		if config.verbose {
+			fmt.Printf("  - a description ☑️\n")
+		} else {
+			fmt.Printf("description ☑️, ")
+		}
+	} else {
+		if config.verbose {
+			fmt.Printf("  - no description 😇\n")
+		} else {
+			fmt.Printf("no description 😇, ")
+		}
 	}
 
 	// https://docs.github.com/en/rest/reference/repos#get-a-repository-readme
@@ -64,18 +88,34 @@ func main() {
 		&readme)
 
 	if len(readme.Name) > 0 {
-		fmt.Printf("  - a README ☑️\n")
+		if config.verbose {
+			fmt.Printf("  - a README ☑️\n")
+		} else {
+			fmt.Printf("README ☑️, ")
+		}
 	} else if strings.HasPrefix(errReadme.Error(), "HTTP 404: Not Found") {
-		fmt.Printf("  - no README 😇\n")
+		if config.verbose {
+			fmt.Printf("no README 😇, \n")
+		} else {
+			fmt.Printf("no README 😇, ")
+		}
 	} else {
 		fmt.Println(errReadme)
 		return
 	}
 
 	if len(repo.Topics) > 0 {
-		fmt.Printf("  - topics ☑️\n")
+		if config.verbose {
+			fmt.Printf("  - topics ☑️\n")
+		} else {
+			fmt.Printf("topics ☑️, ")
+		}
 	} else {
-		fmt.Printf("  - no topics 😇\n")
+		if config.verbose {
+			fmt.Printf("  - no topics 😇\n")
+		} else {
+			fmt.Printf("no topics 😇, ")
+		}
 	}
 
 	// https://docs.github.com/en/rest/reference/collaborators#list-repository-collaborators
@@ -94,9 +134,17 @@ func main() {
 			return
 		}
 	} else if len(collaborators) <= 1 {
-		fmt.Printf("  - %d collaborator 👤\n", len(collaborators))
+		if config.verbose {
+			fmt.Printf("  - %d collaborator 👤\n", len(collaborators))
+		} else {
+			fmt.Printf("%d collaborator 👤, ", len(collaborators))
+		}
 	} else {
-		fmt.Printf("  - %d collaborators 👥\n", len(collaborators))
+		if config.verbose {
+			fmt.Printf("  - %d collaborators 👥\n", len(collaborators))
+		} else {
+			fmt.Printf("%d collaborators 👥, ", len(collaborators))
+		}
 	}
 
 	// https://docs.github.com/en/rest/reference/metrics#get-community-profile-metrics
@@ -111,7 +159,11 @@ func main() {
 		if errCommunityProfile != nil {
 			fmt.Println(errCommunityProfile)
 		}
-		fmt.Printf("  - a community profile score of %d 💯\n", community_profile.Health_percentage)
+		if config.verbose {
+			fmt.Printf("  - a community profile score of %d 💯\n", community_profile.Health_percentage)
+		} else {
+			fmt.Printf("community profile score: %d 💯\n", community_profile.Health_percentage)
+		}
 	}
 }
 
