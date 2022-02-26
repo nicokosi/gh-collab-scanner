@@ -149,20 +149,20 @@ func main() {
 
 	// https://docs.github.com/en/rest/reference/metrics#get-community-profile-metrics
 	if strings.Compare(repo.Visibility, "public") == 0 {
-		community_profile := struct {
+		communityProfile := struct {
 			Health_percentage int64
 		}{}
 		client, errCommunityProfile := gh.RESTClient(nil)
 		errCommunityProfile = client.Get(
 			"repos/"+repoWithOrg+"/community/profile",
-			&community_profile)
+			&communityProfile)
 		if errCommunityProfile != nil {
 			fmt.Println(errCommunityProfile)
 		}
 		if config.verbose {
-			fmt.Printf("  - a community profile score of %d 💯\n", community_profile.Health_percentage)
+			fmt.Printf("  - a community profile score of %d 💯\n", communityProfile.Health_percentage)
 		} else {
-			fmt.Printf("community profile score: %d 💯\n", community_profile.Health_percentage)
+			fmt.Printf("community profile score: %d 💯\n", communityProfile.Health_percentage)
 		}
 	}
 }
