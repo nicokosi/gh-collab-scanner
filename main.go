@@ -20,64 +20,42 @@ func parseFlags() config {
 	return config{*repo, *verbose}
 }
 
+type owner struct{ Login string }
+
+type repo struct {
+	Name        string
+	Owner       owner
+	Description string
+	Topics      []string
+	Visibility  string
+}
+
+type collaborator struct {
+	login string
+}
+
 func main() {
-	var repoWithOrg = ""
 	config := parseFlags()
+	repoWithOrg := getRepo(config)
+	repo := printRepo(config, repoWithOrg)
+	printCollaborators(config, repoWithOrg)
+	if strings.Compare(repo.Visibility, "public") == 0 {
+		printCommunityScore(config, repoWithOrg)
+	}
+}
+
+func getRepo(config config) string {
 	if len(config.repo) > 1 {
-		repoWithOrg = config.repo
-	} else {
-		if config.verbose {
-			fmt.Printf("(current repo)\n")
-		}
-		currentRepo, _ := gh.CurrentRepository()
-		repoWithOrg = currentRepo.Owner() + "/" + currentRepo.Name()
-	}
-
-	client, err := gh.RESTClient(nil)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	user := struct{ Login string }{}
-	err = client.Get("user", &user)
-
-	// https://docs.github.com/en/rest/reference/repos#get-a-repository
-	type Owner struct{ Login string }
-	repo := struct {
-		Name        string
-		Owner       Owner
-		Description string
-		Topics      []string
-		Visibility  string
-	}{}
-	client, err2 := gh.RESTClient(nil)
-	err2 = client.Get(
-		"repos/"+repoWithOrg,
-		&repo)
-	if err2 != nil {
-		fmt.Println(err2)
-		return
+		return config.repo
 	}
 	if config.verbose {
-		fmt.Printf("Repository %s has:\n", repoWithOrg)
-	} else {
-		fmt.Printf("Repo %s has: ", repoWithOrg)
+		fmt.Printf("(current repo)\n")
 	}
+	currentRepo, _ := gh.CurrentRepository()
+	return currentRepo.Owner() + "/" + currentRepo.Name()
+}
 
-	if len(repo.Description) > 0 {
-		if config.verbose {
-			fmt.Printf("  - a description ☑️\n")
-		} else {
-			fmt.Printf("description ☑️, ")
-		}
-	} else {
-		if config.verbose {
-			fmt.Printf("  - no description 😇\n")
-		} else {
-			fmt.Printf("no description 😇, ")
-		}
-	}
-
+func printRepo(config config, repoWithOrg string) repo {
 	// https://docs.github.com/en/rest/reference/repos#get-a-repository-readme
 	readme := struct {
 		Name string
@@ -101,9 +79,22 @@ func main() {
 		}
 	} else {
 		fmt.Println(errReadme)
-		return
 	}
 
+	repo := struct {
+		Name        string
+		Owner       owner
+		Description string
+		Topics      []string
+		Visibility  string
+	}{}
+	client, errRepo := gh.RESTClient(nil)
+	errRepo = client.Get(
+		"repos/"+repoWithOrg,
+		&repo)
+	if errRepo != nil {
+		fmt.Println(errRepo)
+	}
 	if len(repo.Topics) > 0 {
 		if config.verbose {
 			fmt.Printf("  - topics ☑️\n")
@@ -117,12 +108,13 @@ func main() {
 			fmt.Printf("no topics 😇, ")
 		}
 	}
+	return repo
+}
 
+func printCollaborators(config config, repoWithOrg string) []collaborator {
 	// https://docs.github.com/en/rest/reference/collaborators#list-repository-collaborators
-	collaborators := []struct {
-		login string
-	}{}
 	client, errCollabs := gh.RESTClient(nil)
+	collaborators := []collaborator{}
 	errCollabs = client.Get(
 		"repos/"+repoWithOrg+"/collaborators",
 		&collaborators)
@@ -130,8 +122,7 @@ func main() {
 		if strings.HasPrefix(errCollabs.Error(), "HTTP 403") {
 			// 🤫
 		} else {
-			fmt.Println(errReadme)
-			return
+			fmt.Println(errCollabs)
 		}
 	} else if len(collaborators) <= 1 {
 		if config.verbose {
@@ -146,26 +137,24 @@ func main() {
 			fmt.Printf("%d collaborators 👥, ", len(collaborators))
 		}
 	}
-
-	// https://docs.github.com/en/rest/reference/metrics#get-community-profile-metrics
-	if strings.Compare(repo.Visibility, "public") == 0 {
-		communityProfile := struct {
-			Health_percentage int64
-		}{}
-		client, errCommunityProfile := gh.RESTClient(nil)
-		errCommunityProfile = client.Get(
-			"repos/"+repoWithOrg+"/community/profile",
-			&communityProfile)
-		if errCommunityProfile != nil {
-			fmt.Println(errCommunityProfile)
-		}
-		if config.verbose {
-			fmt.Printf("  - a community profile score of %d 💯\n", communityProfile.Health_percentage)
-		} else {
-			fmt.Printf("community profile score: %d 💯\n", communityProfile.Health_percentage)
-		}
-	}
+	return collaborators
 }
 
-// For more examples of using go-gh, see:
-// https://github.com/cli/go-gh/blob/trunk/example_gh_test.go
+func printCommunityScore(config config, repoWithOrg string) {
+	// https://docs.github.com/en/rest/reference/metrics#get-community-profile-metrics
+	communityProfile := struct {
+		Health_percentage int64
+	}{}
+	client, errCommunityProfile := gh.RESTClient(nil)
+	errCommunityProfile = client.Get(
+		"repos/"+repoWithOrg+"/community/profile",
+		&communityProfile)
+	if errCommunityProfile != nil {
+		fmt.Println(errCommunityProfile)
+	}
+	if config.verbose {
+		fmt.Printf("  - a community profile score of %d 💯\n", communityProfile.Health_percentage)
+	} else {
+		fmt.Printf("community profile score: %d 💯\n", communityProfile.Health_percentage)
+	}
+}
