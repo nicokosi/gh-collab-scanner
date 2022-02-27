@@ -1,0 +1,9 @@
+{
+    "name": "buzz",
+    "owner": {
+        "login": "Coyote"
+    },
+    "description": "Beep, beep",
+    "topics": ["old", "cartoon"],
+    "visibility": "public"
+}
