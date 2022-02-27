@@ -37,10 +37,17 @@ type collaborator struct {
 func main() {
 	config := parseFlags()
 	repoWithOrg := getRepo(config)
-	repo := printRepo(config, repoWithOrg)
-	printCollaborators(config, repoWithOrg)
-	if strings.Compare(repo.Visibility, "public") == 0 {
-		printCommunityScore(config, repoWithOrg)
+
+	repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
+	if validRepo {
+		fmt.Printf(repoMessage)
+		collaboratorsMessage := scanCollaborators(config, repoWithOrg)
+		fmt.Printf(collaboratorsMessage)
+
+		if strings.Compare(repo.Visibility, "public") == 0 {
+			communityScoreMessage := scanCommunityScore(config, repoWithOrg)
+			fmt.Printf(communityScoreMessage)
+		}
 	}
 }
 
@@ -55,30 +62,33 @@ func getRepo(config config) string {
 	return currentRepo.Owner() + "/" + currentRepo.Name()
 }
 
-func printRepo(config config, repoWithOrg string) repo {
+func scanRepo(config config, repoWithOrg string) (message string, repository repo, validRepo bool) {
 	// https://docs.github.com/en/rest/reference/repos#get-a-repository-readme
 	readme := struct {
 		Name string
 	}{}
-	client, errReadme := gh.RESTClient(nil)
-	errReadme = client.Get(
+	client, err := gh.RESTClient(nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = client.Get(
 		"repos/"+repoWithOrg+"/readme",
 		&readme)
-
 	if len(readme.Name) > 0 {
 		if config.verbose {
-			fmt.Printf("  - a README ☑️\n")
+			message = message + "  - a README ☑️\n"
 		} else {
-			fmt.Printf("README ☑️, ")
+			message = message + "README ☑️, "
 		}
-	} else if strings.HasPrefix(errReadme.Error(), "HTTP 404: Not Found") {
+	} else if strings.HasPrefix(err.Error(), "HTTP 404: Not Found") {
 		if config.verbose {
-			fmt.Printf("no README 😇, \n")
+			message = message + "no README 😇, \n"
 		} else {
-			fmt.Printf("no README 😇, ")
+			message = message + "no README 😇, "
 		}
 	} else {
-		fmt.Println(errReadme)
+		fmt.Println(err)
 	}
 
 	repo := struct {
@@ -88,73 +98,85 @@ func printRepo(config config, repoWithOrg string) repo {
 		Topics      []string
 		Visibility  string
 	}{}
-	client, errRepo := gh.RESTClient(nil)
-	errRepo = client.Get(
+	errRepo := client.Get(
 		"repos/"+repoWithOrg,
 		&repo)
 	if errRepo != nil {
 		fmt.Println(errRepo)
+		return
 	}
 	if len(repo.Topics) > 0 {
 		if config.verbose {
-			fmt.Printf("  - topics ☑️\n")
+			message = message + "  - topics ☑️\n"
 		} else {
-			fmt.Printf("topics ☑️, ")
+			message = message + "topics ☑️, "
 		}
 	} else {
 		if config.verbose {
-			fmt.Printf("  - no topics 😇\n")
+			message = message + "  - no topics 😇\n"
 		} else {
-			fmt.Printf("no topics 😇, ")
+			message = message + "no topics 😇, "
 		}
 	}
-	return repo
+	return message, repo, true
 }
 
-func printCollaborators(config config, repoWithOrg string) []collaborator {
+func scanCollaborators(config config, repoWithOrg string) string {
 	// https://docs.github.com/en/rest/reference/collaborators#list-repository-collaborators
-	client, errCollabs := gh.RESTClient(nil)
+	client, err := gh.RESTClient(nil)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
 	collaborators := []collaborator{}
-	errCollabs = client.Get(
+	err = client.Get(
 		"repos/"+repoWithOrg+"/collaborators",
 		&collaborators)
-	if errCollabs != nil && len(errCollabs.Error()) > 0 {
-		if strings.HasPrefix(errCollabs.Error(), "HTTP 403") {
+	message := ""
+	if err != nil && len(err.Error()) > 0 {
+		if strings.HasPrefix(err.Error(), "HTTP 403") {
 			// 🤫
 		} else {
-			fmt.Println(errCollabs)
+			fmt.Println(err)
 		}
 	} else if len(collaborators) <= 1 {
 		if config.verbose {
-			fmt.Printf("  - %d collaborator 👤\n", len(collaborators))
+			message = message + fmt.Sprintf("  - %d collaborator 👤\n", len(collaborators))
 		} else {
-			fmt.Printf("%d collaborator 👤, ", len(collaborators))
+			message = message + fmt.Sprintf("%d collaborator 👤, ", len(collaborators))
 		}
 	} else {
 		if config.verbose {
-			fmt.Printf("  - %d collaborators 👥\n", len(collaborators))
+			message = message + fmt.Sprintf("  - %d collaborators 👥\n", len(collaborators))
 		} else {
-			fmt.Printf("%d collaborators 👥, ", len(collaborators))
+			message = message + fmt.Sprintf("%d collaborators 👥, ", len(collaborators))
 		}
 	}
-	return collaborators
+	return message
 }
 
-func printCommunityScore(config config, repoWithOrg string) {
+func scanCommunityScore(config config, repoWithOrg string) string {
 	// https://docs.github.com/en/rest/reference/metrics#get-community-profile-metrics
 	communityProfile := struct {
 		Health_percentage int64
 	}{}
-	client, errCommunityProfile := gh.RESTClient(nil)
-	errCommunityProfile = client.Get(
+	client, err := gh.RESTClient(nil)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	err = client.Get(
 		"repos/"+repoWithOrg+"/community/profile",
 		&communityProfile)
-	if errCommunityProfile != nil {
-		fmt.Println(errCommunityProfile)
+	if err != nil {
+		fmt.Println(err)
+		return ""
 	}
+	message := ""
 	if config.verbose {
-		fmt.Printf("  - a community profile score of %d 💯\n", communityProfile.Health_percentage)
+		message = message + fmt.Sprintf("  - a community profile score of %d 💯\n", communityProfile.Health_percentage)
 	} else {
-		fmt.Printf("community profile score: %d 💯\n", communityProfile.Health_percentage)
+		message = message + fmt.Sprintf("community profile score: %d 💯\n", communityProfile.Health_percentage)
 	}
+	return message
 }
