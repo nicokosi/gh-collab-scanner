@@ -53,3 +53,18 @@ Install and run:
 ```sh
 gh extension install .; gh collab-scanner
 ```
+
+## Release
+
+Check the current version:
+
+```sh
+gh release view | head -n 2
+````
+
+Then create a tag for the next version with respect with [semver](https://semver.org):
+
+```sh
+git tag ${version}
+git push origin ${version}
+```
