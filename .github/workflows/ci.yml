@@ -10,6 +10,8 @@ jobs:
           go-version: "1.17"
       - name: Check test env 👮
         run: gh pr view https://github.com/nicokosi/gh-collab-scanner/pull/8 --json=title
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test 🧪
         run: go test -v
       - name: Examine code 🔍
