@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/cli/go-gh"
@@ -36,7 +37,11 @@ type collaborator struct {
 
 func main() {
 	config := parseFlags()
-	repoWithOrg := getRepo(config)
+	repoWithOrg, error := getRepo(config)
+	if error != nil {
+		fmt.Print(error)
+		os.Exit(1)
+	}
 
 	repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
 	if validRepo {
@@ -51,15 +56,18 @@ func main() {
 	}
 }
 
-func getRepo(config config) string {
+func getRepo(config config) (string, error) {
 	if len(config.repo) > 1 {
-		return config.repo
+		return config.repo, nil
 	}
 	if config.verbose {
 		fmt.Printf("(current repo)\n")
 	}
-	currentRepo, _ := gh.CurrentRepository()
-	return currentRepo.Owner() + "/" + currentRepo.Name()
+	currentRepo, error := gh.CurrentRepository()
+	if error != nil {
+		return "", error
+	}
+	return currentRepo.Owner() + "/" + currentRepo.Name(), nil
 }
 
 func scanRepo(config config, repoWithOrg string) (message string, repository repo, validRepo bool) {
