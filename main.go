@@ -40,6 +40,7 @@ func main() {
 	repoWithOrg, error := getRepo(config)
 	if error != nil {
 		fmt.Print(error)
+		println("Check 'gh auth status'. You may need to run 'gh config set git_protocol ssh'.")
 		os.Exit(1)
 	}
 
