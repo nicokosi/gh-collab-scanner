@@ -40,13 +40,17 @@ Need help? Run:
 gh-collab-scanner --help
 ```
 
-## Build/install from source code
+## Development
 
-Build an run:
+### Build from source code ▶️
+
+Build then run:
 
 ```sh
 go build && ./gh-collab-scanner
 ```
+
+### Install from source code ⏺
 
 Install and run:
 
@@ -54,7 +58,19 @@ Install and run:
 gh extension install .; gh collab-scanner
 ```
 
-## Release
+### Examine code 🔍
+
+```sh
+go vet
+```
+
+### Run tests ☑️
+
+```sh
+go test -v -cover
+```
+
+### Release 📦
 
 Check the current version:
 
