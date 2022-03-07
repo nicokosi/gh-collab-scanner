@@ -39,8 +39,10 @@ func main() {
 	config := parseFlags()
 	repoWithOrg, error := getRepo(config)
 	if error != nil {
-		fmt.Print(error)
-		println("Check 'gh auth status'. You may need to run 'gh config set git_protocol ssh'.")
+		fmt.Println(error)
+		if strings.Contains(error.Error(), "none of the git remotes configured for this repository point to a known GitHub host") {
+			println("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
+		}
 		os.Exit(1)
 	}
 
