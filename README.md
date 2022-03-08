@@ -24,7 +24,7 @@ will display something like:
   (current repo)
   Repo nicokosi/gh-collab-scanner has: description ☑️, README ☑️, topics ☑️, 1 collaborator 👤, community profile score: 33 💯
 
-For any GitHub repository via its full name `org`/`repo` (i.e. python/peps)
+For any GitHub repository, via its full name ${org}/${repo} (i.e. python/peps):
 
 ```sh
 gh collab-scanner --repo python/peps
@@ -40,7 +40,7 @@ Need help? Run:
 gh-collab-scanner --help
 ```
 
-## Development
+## Develop
 
 ### Build from source code ▶️
 
@@ -76,7 +76,7 @@ Check the current version:
 
 ```sh
 gh release view | head -n 2
-````
+```
 
 Then create a tag for the next version with respect with [semver](https://semver.org):
 
