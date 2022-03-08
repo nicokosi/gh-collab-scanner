@@ -2,8 +2,7 @@
 
 A [GitHub CLI extension](https://docs.github.com/en/github-cli/github-cli/using-github-cli-extensions) that displays collaboration-related information on a repository.
 
-![Kapture 2022-02-26 at 16 26 46](https://user-images.githubusercontent.com/3862051/155848808-716c27ba-7566-447c-8e2b-e1b2601f37a5.gif)
-
+![collab-scanner](https://user-images.githubusercontent.com/3862051/157172870-0d50c1b8-d238-4227-ad86-d12855303e13.gif)
 
 ## Install
 
