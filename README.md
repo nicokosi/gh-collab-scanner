@@ -39,6 +39,12 @@ In order to scan all repositories for a given organization, use the `--org` flag
 gh collab-scanner --org python
 ```
 
+In order to scan all repositories for a given user, use the `--user` flag:
+
+```sh
+gh collab-scanner --user torvalds
+```
+
 Need help? Run:
 
 ```sh

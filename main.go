@@ -12,21 +12,24 @@ import (
 type config struct {
 	repo    string
 	org     string
+	user    string
 	verbose bool
 }
 
 func parseFlags() config {
-	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted and no 'org' flag")
-	org := flag.String("org", "", "a optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repo for current folder if omitted and no 'repo' flag")
+	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted and no 'org' nor 'user' flag")
+	org := flag.String("org", "", "a optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repo for current folder if omitted and no 'repo' nor 'user' flag")
+	user := flag.String("user", "", "a optional GitHub user (i.e. 'torvalds') to scan the repositories from (100 max); use repo for current folder if omitted and no 'repo' nor 'org' flag")
 	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
 	flag.Parse()
-	return config{*repo, *org, *verbose}
+	return config{*repo, *org, *user, *verbose}
 }
 
 type owner struct{ Login string }
 
 type repo struct {
 	Name        string
+	Full_name   string
 	Owner       owner
 	Description string
 	Topics      []string
@@ -39,7 +42,7 @@ type collaborator struct {
 
 func main() {
 	config := parseFlags()
-	if len(config.org) > 0 {
+	if len(config.org) > 0 || len(config.user) > 0 {
 		repos := []repo{}
 		repos, error := getRepos(config)
 		if error != nil {
@@ -47,14 +50,13 @@ func main() {
 			os.Exit(2)
 		}
 		for _, repo := range repos {
-			repoWithOrg := config.org + "/" + repo.Name
-			repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
+			repoMessage, repo, validRepo := scanRepo(config, repo.Full_name)
 			if validRepo {
-				fmt.Printf(repoWithOrg + ": " + repoMessage)
-				collaboratorsMessage := scanCollaborators(config, repoWithOrg)
+				fmt.Printf(repo.Full_name + ": " + repoMessage)
+				collaboratorsMessage := scanCollaborators(config, repo.Full_name)
 				fmt.Printf(collaboratorsMessage)
 				if strings.Compare(repo.Visibility, "public") == 0 {
-					communityScoreMessage := scanCommunityScore(config, repoWithOrg)
+					communityScoreMessage := scanCommunityScore(config, repo.Full_name)
 					fmt.Printf(communityScoreMessage)
 				}
 			}
@@ -82,7 +84,7 @@ func main() {
 }
 
 func getRepos(config config) ([]repo, error) {
-	if len(config.org) < 1 {
+	if len(config.org) == 0 && len(config.user) == 0 {
 		return []repo{}, nil
 	}
 	client, err := gh.RESTClient(nil)
@@ -90,12 +92,21 @@ func getRepos(config config) ([]repo, error) {
 		fmt.Println(err)
 		return []repo{}, err
 	}
-	// https://docs.github.com/en/rest/reference/repos#list-organization-repositories
-	repos := []repo{}
-	err = client.Get(
-		"orgs/"+config.org+"/repos?sort=full_name&per_page=100",
-		&repos)
-	return repos, err
+	if len(config.org) > 0 {
+		// https://docs.github.com/en/rest/reference/repos#list-organization-repositories
+		repos := []repo{}
+		err = client.Get(
+			"orgs/"+config.org+"/repos?sort=full_name&per_page=100",
+			&repos)
+		return repos, err
+	} else {
+		// https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user
+		repos := []repo{}
+		err = client.Get(
+			"users/"+config.user+"/repos?sort=full_name&per_page=100",
+			&repos)
+		return repos, err
+	}
 }
 
 func getRepo(config config) (string, error) {
@@ -143,6 +154,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 
 	repo := struct {
 		Name        string
+		Full_name   string
 		Owner       owner
 		Description string
 		Topics      []string
