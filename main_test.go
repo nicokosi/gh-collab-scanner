@@ -40,6 +40,33 @@ func TestGetRepos_for_org(t *testing.T) {
 	assert.Nil(t, error)
 }
 
+func TestGetRepos_for_user(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/users/acme/repos").
+		Reply(200).
+		File("test_repos.json")
+
+	repositories, error := getRepos(config{user: "acme"})
+
+	assert.NotEmpty(t, repositories)
+	assert.Nil(t, error)
+}
+
+func TestGetRepos_error(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/users/acme/repos").
+		Reply(500)
+
+	repositories, error := getRepos(config{user: "acme"})
+
+	assert.Empty(t, repositories)
+	assert.NotNil(t, error)
+}
+
 func TestScanRepo_Verbose(t *testing.T) {
 	defer gock.Off()
 	defer gock.DisableNetworking()
