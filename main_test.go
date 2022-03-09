@@ -26,6 +26,20 @@ func TestScanRepo(t *testing.T) {
 	assert.Equal(t, "README ☑️, topics ☑️, ", message)
 }
 
+func TestGetRepos_for_org(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/orgs/acme/repos").
+		Reply(200).
+		File("test_repos.json")
+
+	repositories, error := getRepos(config{org: "acme"})
+
+	assert.NotEmpty(t, repositories)
+	assert.Nil(t, error)
+}
+
 func TestScanRepo_Verbose(t *testing.T) {
 	defer gock.Off()
 	defer gock.DisableNetworking()
