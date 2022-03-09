@@ -11,14 +11,16 @@ import (
 
 type config struct {
 	repo    string
+	org     string
 	verbose bool
 }
 
 func parseFlags() config {
-	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted")
+	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted and no 'org' flag")
+	org := flag.String("org", "", "a optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repo for current folder if omitted and no 'repo' flag")
 	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
 	flag.Parse()
-	return config{*repo, *verbose}
+	return config{*repo, *org, *verbose}
 }
 
 type owner struct{ Login string }
@@ -37,26 +39,63 @@ type collaborator struct {
 
 func main() {
 	config := parseFlags()
-	repoWithOrg, error := getRepo(config)
-	if error != nil {
-		fmt.Println(error)
-		if strings.Contains(error.Error(), "none of the git remotes configured for this repository point to a known GitHub host") {
-			println("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
+	if len(config.org) > 0 {
+		repos := []repo{}
+		repos, error := getRepos(config)
+		if error != nil {
+			fmt.Println(error)
+			os.Exit(2)
 		}
-		os.Exit(1)
-	}
-
-	repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
-	if validRepo {
-		fmt.Printf(repoMessage)
-		collaboratorsMessage := scanCollaborators(config, repoWithOrg)
-		fmt.Printf(collaboratorsMessage)
-
-		if strings.Compare(repo.Visibility, "public") == 0 {
-			communityScoreMessage := scanCommunityScore(config, repoWithOrg)
-			fmt.Printf(communityScoreMessage)
+		for _, repo := range repos {
+			repoWithOrg := config.org + "/" + repo.Name
+			repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
+			if validRepo {
+				fmt.Printf(repoWithOrg + ": " + repoMessage)
+				collaboratorsMessage := scanCollaborators(config, repoWithOrg)
+				fmt.Printf(collaboratorsMessage)
+				if strings.Compare(repo.Visibility, "public") == 0 {
+					communityScoreMessage := scanCommunityScore(config, repoWithOrg)
+					fmt.Printf(communityScoreMessage)
+				}
+			}
+		}
+	} else if len(config.repo) > 0 {
+		repoWithOrg, error := getRepo(config)
+		if error != nil {
+			fmt.Println(error)
+			if strings.Contains(error.Error(), "none of the git remotes configured for this repository point to a known GitHub host") {
+				println("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
+			}
+			os.Exit(1)
+		}
+		repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
+		if validRepo {
+			fmt.Printf(repoMessage)
+			collaboratorsMessage := scanCollaborators(config, repoWithOrg)
+			fmt.Printf(collaboratorsMessage)
+			if strings.Compare(repo.Visibility, "public") == 0 {
+				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
+				fmt.Printf(communityScoreMessage)
+			}
 		}
 	}
+}
+
+func getRepos(config config) ([]repo, error) {
+	if len(config.org) < 1 {
+		return []repo{}, nil
+	}
+	client, err := gh.RESTClient(nil)
+	if err != nil {
+		fmt.Println(err)
+		return []repo{}, err
+	}
+	// https://docs.github.com/en/rest/reference/repos#list-organization-repositories
+	repos := []repo{}
+	err = client.Get(
+		"orgs/"+config.org+"/repos?sort=full_name&per_page=100",
+		&repos)
+	return repos, err
 }
 
 func getRepo(config config) (string, error) {
