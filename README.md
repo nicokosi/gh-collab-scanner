@@ -20,8 +20,8 @@ gh collab-scanner
 
 will display something like:
 
-  (current repo)
-  Repo nicokosi/gh-collab-scanner has: description ☑️, README ☑️, topics ☑️, 1 collaborator 👤, community profile score: 33 💯
+> (current repo)
+> Repo nicokosi/gh-collab-scanner has: description ☑️, README ☑️, topics ☑️, 1 collaborator 👤, community profile score: 33 💯
 
 For any GitHub repository, via its full name ${org}/${repo} (i.e. python/peps), use the `--repo` flag:
 
@@ -31,7 +31,7 @@ gh collab-scanner --repo python/peps
 
 It will display something like:
 
-  Repo python/peps has: description ☑️, README ☑️, no topics 😇, community profile score: 71 💯
+> Repo python/peps has: description ☑️, README ☑️, no topics 😇, community profile score: 71 💯
 
 In order to scan all repositories for a given organization, use the `--org` flag:
 
