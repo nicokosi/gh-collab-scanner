@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/cli/go-gh"
@@ -13,6 +14,7 @@ type config struct {
 	repo    string
 	org     string
 	user    string
+	page    int
 	verbose bool
 }
 
@@ -20,9 +22,10 @@ func parseFlags() config {
 	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted and no 'org' nor 'user' flag")
 	org := flag.String("org", "", "a optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repo for current folder if omitted and no 'repo' nor 'user' flag")
 	user := flag.String("user", "", "a optional GitHub user (i.e. 'torvalds') to scan the repositories from (100 max); use repo for current folder if omitted and no 'repo' nor 'org' flag")
+	page := flag.Int("page", 1, "Page number for 'repo' and 'user' flags, 100 repositories per page")
 	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
 	flag.Parse()
-	return config{*repo, *org, *user, *verbose}
+	return config{*repo, *org, *user, *page, *verbose}
 }
 
 type owner struct{ Login string }
@@ -96,14 +99,14 @@ func getRepos(config config) ([]repo, error) {
 		// https://docs.github.com/en/rest/reference/repos#list-organization-repositories
 		repos := []repo{}
 		err = client.Get(
-			"orgs/"+config.org+"/repos?sort=full_name&per_page=100",
+			"orgs/"+config.org+"/repos?sort=full_name&per_page=100&page="+strconv.Itoa(config.page),
 			&repos)
 		return repos, err
 	} else {
 		// https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user
 		repos := []repo{}
 		err = client.Get(
-			"users/"+config.user+"/repos?sort=full_name&per_page=100",
+			"users/"+config.user+"/repos?sort=full_name&per_page=100&page="+strconv.Itoa(config.page),
 			&repos)
 		return repos, err
 	}
