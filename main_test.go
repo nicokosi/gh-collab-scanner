@@ -67,6 +67,15 @@ func TestGetRepos_error(t *testing.T) {
 	assert.NotNil(t, error)
 }
 
+func TestGetRepos_no_user_nor_org(t *testing.T) {
+	defer gock.Off()
+
+	repositories, error := getRepos(config{})
+
+	assert.Empty(t, repositories)
+	assert.Nil(t, error)
+}
+
 func TestScanRepo_Verbose(t *testing.T) {
 	defer gock.Off()
 	defer gock.DisableNetworking()
