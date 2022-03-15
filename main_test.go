@@ -92,7 +92,7 @@ func TestScanRepo_Verbose(t *testing.T) {
 
 	assert.True(t, validRepo)
 	assert.Equal(t, repo{Name: "buzz", Owner: owner{Login: "Coyote"}, Description: "Beep, beep", Topics: []string{"old", "cartoon"}, Visibility: "public"}, repository)
-	assert.Equal(t, "  - a README ☑️\n  - topics ☑️\n", message)
+	assert.Equal(t, "\n  - a README ☑️\n  - topics ☑️\n", message)
 }
 
 func TestScanRepo_ReadmeError(t *testing.T) {
@@ -127,7 +127,7 @@ func TestScanRepo_RepoError(t *testing.T) {
 	message, _, validRepo := scanRepo(config{repo: "acme/buzz", verbose: true}, "acme/buzz")
 
 	assert.False(t, validRepo)
-	assert.Equal(t, "  - a README ☑️\n", message)
+	assert.Equal(t, "\n  - a README ☑️\n", message)
 }
 
 func TestScanCollaborators(t *testing.T) {
@@ -140,7 +140,7 @@ func TestScanCollaborators(t *testing.T) {
 
 	message := scanCollaborators(config{repo: "acme/buzz"}, "acme/buzz")
 
-	assert.Equal(t, "1 collaborator 👤, ", message)
+	assert.Equal(t, "1 collaborator 👤 ", message)
 }
 
 func TestScanCollaborators_Verbose(t *testing.T) {
@@ -153,7 +153,7 @@ func TestScanCollaborators_Verbose(t *testing.T) {
 
 	message := scanCollaborators(config{repo: "acme/buzz", verbose: true}, "acme/buzz")
 
-	assert.Equal(t, "  - 1 collaborator 👤\n", message)
+	assert.Equal(t, "  - 1 collaborator 👤", message)
 }
 
 func TestScanCommunityScore(t *testing.T) {
@@ -166,7 +166,7 @@ func TestScanCommunityScore(t *testing.T) {
 
 	message := scanCommunityScore(config{repo: "acme/buzz"}, "acme/buzz")
 
-	assert.Equal(t, "community profile score: 42 💯\n", message)
+	assert.Equal(t, "community profile score: 42 💯", message)
 }
 
 func TestScanCommunityScore_Verbose(t *testing.T) {
@@ -179,5 +179,5 @@ func TestScanCommunityScore_Verbose(t *testing.T) {
 
 	message := scanCommunityScore(config{repo: "acme/buzz", verbose: true}, "acme/buzz")
 
-	assert.Equal(t, "  - a community profile score of 42 💯\n", message)
+	assert.Equal(t, "  - a community profile score of 42 💯", message)
 }
