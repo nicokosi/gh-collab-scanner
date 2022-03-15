@@ -49,7 +49,7 @@ func main() {
 		repos := []repo{}
 		repos, error := getRepos(config)
 		if error != nil {
-			fmt.Println(error)
+			fmt.Print(error)
 			os.Exit(2)
 		}
 		for _, repo := range repos {
@@ -63,13 +63,14 @@ func main() {
 					fmt.Printf(communityScoreMessage)
 				}
 			}
+			println()
 		}
 	} else if len(config.repo) > 0 {
 		repoWithOrg, error := getRepo(config)
 		if error != nil {
-			fmt.Println(error)
+			fmt.Print(error)
 			if strings.Contains(error.Error(), "none of the git remotes configured for this repository point to a known GitHub host") {
-				println("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
+				print("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
 			}
 			os.Exit(1)
 		}
@@ -92,7 +93,7 @@ func getRepos(config config) ([]repo, error) {
 	}
 	client, err := gh.RESTClient(nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		return []repo{}, err
 	}
 	if len(config.org) > 0 {
@@ -133,7 +134,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 	}{}
 	client, err := gh.RESTClient(nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		return
 	}
 	err = client.Get(
@@ -141,18 +142,18 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 		&readme)
 	if len(readme.Name) > 0 {
 		if config.verbose {
-			message = message + "  - a README ☑️\n"
+			message = "\n" + message + "  - a README ☑️\n"
 		} else {
 			message = message + "README ☑️, "
 		}
 	} else if strings.HasPrefix(err.Error(), "HTTP 404: Not Found") {
 		if config.verbose {
-			message = message + "no README 😇, \n"
+			message = "\n" + message + "  - no README 😇, \n"
 		} else {
 			message = message + "no README 😇, "
 		}
 	} else {
-		fmt.Println(err)
+		fmt.Print(err)
 	}
 
 	repo := struct {
@@ -167,7 +168,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 		"repos/"+repoWithOrg,
 		&repo)
 	if errRepo != nil {
-		fmt.Println(errRepo)
+		fmt.Print(errRepo)
 		return
 	}
 	if len(repo.Topics) > 0 {
@@ -190,7 +191,7 @@ func scanCollaborators(config config, repoWithOrg string) string {
 	// https://docs.github.com/en/rest/reference/collaborators#list-repository-collaborators
 	client, err := gh.RESTClient(nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		return ""
 	}
 	collaborators := []collaborator{}
@@ -202,19 +203,19 @@ func scanCollaborators(config config, repoWithOrg string) string {
 		if strings.HasPrefix(err.Error(), "HTTP 403") {
 			// 🤫
 		} else {
-			fmt.Println(err)
+			fmt.Print(err)
 		}
 	} else if len(collaborators) <= 1 {
 		if config.verbose {
-			message = message + fmt.Sprintf("  - %d collaborator 👤\n", len(collaborators))
+			message = message + fmt.Sprintf("  - %d collaborator 👤", len(collaborators))
 		} else {
-			message = message + fmt.Sprintf("%d collaborator 👤, ", len(collaborators))
+			message = message + fmt.Sprintf("%d collaborator 👤 ", len(collaborators))
 		}
 	} else {
 		if config.verbose {
-			message = message + fmt.Sprintf("  - %d collaborators 👥\n", len(collaborators))
+			message = message + fmt.Sprintf("  - %d collaborators 👥", len(collaborators))
 		} else {
-			message = message + fmt.Sprintf("%d collaborators 👥, ", len(collaborators))
+			message = message + fmt.Sprintf("%d collaborators 👥 ", len(collaborators))
 		}
 	}
 	return message
@@ -227,21 +228,21 @@ func scanCommunityScore(config config, repoWithOrg string) string {
 	}{}
 	client, err := gh.RESTClient(nil)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		return ""
 	}
 	err = client.Get(
 		"repos/"+repoWithOrg+"/community/profile",
 		&communityProfile)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		return ""
 	}
 	message := ""
 	if config.verbose {
-		message = message + fmt.Sprintf("  - a community profile score of %d 💯\n", communityProfile.Health_percentage)
+		message = message + fmt.Sprintf("  - a community profile score of %d 💯", communityProfile.Health_percentage)
 	} else {
-		message = message + fmt.Sprintf("community profile score: %d 💯\n", communityProfile.Health_percentage)
+		message = message + fmt.Sprintf("community profile score: %d 💯", communityProfile.Health_percentage)
 	}
 	return message
 }
