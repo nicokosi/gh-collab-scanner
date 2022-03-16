@@ -1,16 +1,16 @@
 # `collab-scanner` GitHub CLI extension
 
-A [GitHub CLI extension](https://docs.github.com/en/github-cli/github-cli/using-github-cli-extensions) that displays collaboration-related information on a repository.
+A [GitHub CLI extension](https://docs.github.com/en/github-cli/github-cli/using-github-cli-extensions) that displays collaboration-related information on repositories.
 
 ![collab-scanner](https://user-images.githubusercontent.com/3862051/157172870-0d50c1b8-d238-4227-ad86-d12855303e13.gif)
 
-## Install
+## Install ⬇️
 
 ```sh
 gh extension install nicokosi/gh-collab-scanner
 ```
 
-## Use
+## Use ▶️
 
 From a folder where a GitHub repository has been cloned:
 
@@ -51,9 +51,9 @@ Need help? Run:
 gh-collab-scanner --help
 ```
 
-## Develop
+## Develop 🧑‍💻
 
-### Build from source code ▶️
+### Build from source code 🧑‍💻▶️
 
 Build then run:
 
@@ -61,7 +61,7 @@ Build then run:
 go build && ./gh-collab-scanner
 ```
 
-### Install from source code ⏺
+### Install from source code 🧑‍💻⏺
 
 Install and run:
 
@@ -69,19 +69,19 @@ Install and run:
 gh extension install .; gh collab-scanner
 ```
 
-### Examine code 🔍
+### Examine code 🧑‍💻🔍
 
 ```sh
 go vet
 ```
 
-### Run tests ☑️
+### Run tests 🧑‍💻☑️
 
 ```sh
 go test -v -cover
 ```
 
-### Release 📦
+### Release 🧑‍💻📦
 
 Check the current version:
 
