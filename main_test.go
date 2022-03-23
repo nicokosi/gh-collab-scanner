@@ -140,7 +140,7 @@ func TestScanCollaborators(t *testing.T) {
 
 	message := scanCollaborators(config{repo: "acme/buzz"}, "acme/buzz")
 
-	assert.Equal(t, "1 collaborator 👤 ", message)
+	assert.Equal(t, "1 collaborator 👤", message)
 }
 
 func TestScanCollaborators_Verbose(t *testing.T) {
