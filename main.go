@@ -41,7 +41,7 @@ type repo struct {
 	Description string
 	Topics      []string
 	Visibility  string
-	Fork		bool
+	Fork        bool
 }
 
 type collaborator struct {
@@ -73,7 +73,7 @@ func main() {
 		for _, repo := range repos {
 			repoMessage, repo, validRepo := scanRepo(config, repo.Full_name)
 			if validRepo {
-				fmt.Printf(repo.Full_name + ": " + repoMessage)
+				fmt.Printf(repoMessage)
 				collaboratorsMessage := scanCollaborators(config, repo.Full_name)
 				fmt.Printf(collaboratorsMessage)
 				if strings.Compare(repo.Visibility, "public") == 0 {
@@ -158,17 +158,23 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 	err = client.Get(
 		"repos/"+repoWithOrg+"/readme",
 		&readme)
+	if config.verbose {
+		message += repoWithOrg + " has: "
+	}
+	if !config.verbose && (len(config.repo) > 1 || len(config.user) > 1) {
+		message += repoWithOrg + ": "
+	}
 	if len(readme.Name) > 0 {
 		if config.verbose {
-			message = "\n" + message + "  - a README ☑️\n"
+			message += "\n  - a README ☑️"
 		} else {
-			message = message + "README ☑️, "
+			message += "README ☑️, "
 		}
 	} else if strings.HasPrefix(err.Error(), "HTTP 404: Not Found") {
 		if config.verbose {
-			message = "\n" + message + "  - no README 😇, \n"
+			message += "\n  - no README 😇"
 		} else {
-			message = message + "no README 😇, "
+			message += "no README 😇, "
 		}
 	} else {
 		fmt.Print(err)
@@ -181,7 +187,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 		Description string
 		Topics      []string
 		Visibility  string
-		Fork		bool
+		Fork        bool
 	}{}
 	errRepo := client.Get(
 		"repos/"+repoWithOrg,
@@ -192,15 +198,15 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 	}
 	if len(repo.Topics) > 0 {
 		if config.verbose {
-			message = message + "  - topics ☑️\n"
+			message += "\n  - topics ☑️"
 		} else {
-			message = message + "topics ☑️, "
+			message += "topics ☑️, "
 		}
 	} else {
 		if config.verbose {
-			message = message + "  - no topics 😇\n"
+			message += "\n  - no topics 😇"
 		} else {
-			message = message + "no topics 😇, "
+			message += "no topics 😇, "
 		}
 	}
 	return message, repo, true
@@ -226,15 +232,15 @@ func scanCollaborators(config config, repoWithOrg string) string {
 		}
 	} else if len(collaborators) <= 1 {
 		if config.verbose {
-			message = message + fmt.Sprintf("  - %d collaborator 👤", len(collaborators))
+			message += fmt.Sprintf("\n  - %d collaborator 👤", len(collaborators))
 		} else {
-			message = message + fmt.Sprintf("%d collaborator 👤", len(collaborators))
+			message += fmt.Sprintf("%d collaborator 👤", len(collaborators))
 		}
 	} else {
 		if config.verbose {
-			message = message + fmt.Sprintf("  - %d collaborators 👥", len(collaborators))
+			message += fmt.Sprintf("\n  - %d collaborators 👥", len(collaborators))
 		} else {
-			message = message + fmt.Sprintf("%d collaborators 👥", len(collaborators))
+			message += fmt.Sprintf("%d collaborators 👥", len(collaborators))
 		}
 	}
 	return message
@@ -259,9 +265,9 @@ func scanCommunityScore(config config, repoWithOrg string) string {
 	}
 	message := ""
 	if config.verbose {
-		message = message + fmt.Sprintf("  - a community profile score of %d 💯", communityProfile.Health_percentage)
+		message += fmt.Sprintf("\n  - a community profile score of %d 💯", communityProfile.Health_percentage)
 	} else {
-		message = message + fmt.Sprintf("community profile score: %d 💯", communityProfile.Health_percentage)
+		message += fmt.Sprintf("community profile score: %d 💯", communityProfile.Health_percentage)
 	}
 	return message
 }
