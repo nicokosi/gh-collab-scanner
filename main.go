@@ -65,7 +65,7 @@ func main() {
 			}
 			println()
 		}
-	} else if len(config.repo) > 0 {
+	} else {
 		repoWithOrg, error := getRepo(config)
 		if error != nil {
 			fmt.Print(error)
