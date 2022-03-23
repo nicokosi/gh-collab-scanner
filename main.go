@@ -41,6 +41,7 @@ type repo struct {
 	Description string
 	Topics      []string
 	Visibility  string
+	Fork		bool
 }
 
 type collaborator struct {
@@ -96,7 +97,7 @@ func main() {
 			fmt.Printf(repoMessage)
 			collaboratorsMessage := scanCollaborators(config, repoWithOrg)
 			fmt.Printf(collaboratorsMessage)
-			if strings.Compare(repo.Visibility, "public") == 0 {
+			if !repo.Fork && strings.Compare(repo.Visibility, "public") == 0 {
 				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
 				fmt.Printf(communityScoreMessage)
 			}
@@ -180,6 +181,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 		Description string
 		Topics      []string
 		Visibility  string
+		Fork		bool
 	}{}
 	errRepo := client.Get(
 		"repos/"+repoWithOrg,
@@ -226,13 +228,13 @@ func scanCollaborators(config config, repoWithOrg string) string {
 		if config.verbose {
 			message = message + fmt.Sprintf("  - %d collaborator 👤", len(collaborators))
 		} else {
-			message = message + fmt.Sprintf("%d collaborator 👤 ", len(collaborators))
+			message = message + fmt.Sprintf("%d collaborator 👤", len(collaborators))
 		}
 	} else {
 		if config.verbose {
 			message = message + fmt.Sprintf("  - %d collaborators 👥", len(collaborators))
 		} else {
-			message = message + fmt.Sprintf("%d collaborators 👥 ", len(collaborators))
+			message = message + fmt.Sprintf("%d collaborators 👥", len(collaborators))
 		}
 	}
 	return message
