@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cli/go-gh"
 )
@@ -16,6 +18,7 @@ type config struct {
 	user    string
 	page    int
 	verbose bool
+	version bool
 }
 
 func parseFlags() config {
@@ -24,8 +27,9 @@ func parseFlags() config {
 	user := flag.String("user", "", "a optional GitHub user (i.e. 'torvalds') to scan the repositories from (100 max); use repo for current folder if omitted and no 'repo' nor 'org' flag")
 	page := flag.Int("page", 1, "Page number for 'repo' and 'user' flags, 100 repositories per page")
 	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
+	version := flag.Bool("version", false, "Output version-related information")
 	flag.Parse()
-	return config{*repo, *org, *user, *page, *verbose}
+	return config{*repo, *org, *user, *page, *verbose, *version}
 }
 
 type owner struct{ Login string }
@@ -43,9 +47,22 @@ type collaborator struct {
 	login string
 }
 
+type version struct {
+	commit string
+	date   time.Time
+	dirty  bool
+}
+
 func main() {
 	config := parseFlags()
-	if len(config.org) > 0 || len(config.user) > 0 {
+	if config.version {
+		version := getVersion()
+		dirty := ""
+		if version.dirty {
+			dirty = "(dirty)"
+		}
+		fmt.Printf("Commit %s (%s) %s\n", version.commit, version.date, dirty)
+	} else if len(config.org) > 0 || len(config.user) > 0 {
 		repos := []repo{}
 		repos, error := getRepos(config)
 		if error != nil {
@@ -245,4 +262,25 @@ func scanCommunityScore(config config, repoWithOrg string) string {
 		message = message + fmt.Sprintf("community profile score: %d 💯", communityProfile.Health_percentage)
 	}
 	return message
+}
+
+func getVersion() version {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("Cannot read build info")
+	}
+	revision := "?"
+	dirtyBuild := false
+	date := time.Now()
+	for _, kv := range info.Settings {
+		switch kv.Key {
+		case "vcs.revision":
+			revision = kv.Value
+		case "vcs.time":
+			date, _ = time.Parse(time.RFC3339, kv.Value)
+		case "vcs.modified":
+			dirtyBuild = kv.Value == "true"
+		}
+	}
+	return version{revision, date, dirtyBuild}
 }
