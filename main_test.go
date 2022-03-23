@@ -181,3 +181,10 @@ func TestScanCommunityScore_Verbose(t *testing.T) {
 
 	assert.Equal(t, "  - a community profile score of 42 💯", message)
 }
+
+func TestVersion(t *testing.T) {
+	version := getVersion()
+
+	assert.NotEmpty(t, version.commit)
+	assert.NotEmpty(t, version.date)
+}
