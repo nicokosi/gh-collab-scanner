@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	// "os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cli/go-gh"
 )
@@ -34,17 +36,20 @@ func parseFlags() config {
 }
 
 type model struct {
-	repos []repo
+	spinner spinner.Model
+	repos   []repo
 }
 
 func initialModel() model {
+	s := spinner.New()
 	return model{
-		repos: []repo{},
+		spinner: s,
+		repos:   []repo{},
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return m.spinner.Tick
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -59,17 +64,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// These keys should exit the program.
 		case "ctrl+c", "q":
 			return m, tea.Quit
-		}
-	}
 
-	// Return the updated model to the Bubble Tea runtime for processing.
-	// Note that we're not returning a command.
-	return m, nil
+		default:
+			return m, nil
+		}
+
+	default:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+	}
 }
 
 func (m model) View() string {
 	// The header
-	s := "Hello 👋\n\n"
+	s := fmt.Sprintf("\n\n   %s Loading from GitHub... press q to quit.\n\n", m.spinner.View())
 
 	// Iterate over our choices
 	for _, repo := range m.repos {
