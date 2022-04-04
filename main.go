@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
+	// "os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cli/go-gh"
 )
 
@@ -34,6 +35,58 @@ func parseFlags() config {
 	return config{*repo, *org, *user, *topic, *page, *verbose, *version}
 }
 
+type model struct {
+	repos []repo
+}
+
+func initialModel() model {
+	return model{
+		repos: []repo{},
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	// Is it a key press?
+	case tea.KeyMsg:
+
+		// Cool, what was the actual key pressed?
+		switch msg.String() {
+
+		// These keys should exit the program.
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		}
+	}
+
+	// Return the updated model to the Bubble Tea runtime for processing.
+	// Note that we're not returning a command.
+	return m, nil
+}
+
+func (m model) View() string {
+	// The header
+	s := "Hello 👋\n\n"
+
+	// Iterate over our choices
+	for _, repo := range m.repos {
+
+		// Render the row
+		s += fmt.Sprintf("Repo %s \n", repo.Name)
+	}
+
+	// The footer
+	s += "\nPress q to quit.\n"
+
+	// Send the UI for rendering
+	return s
+}
+
 type owner struct{ Login string }
 
 type repo struct {
@@ -55,7 +108,14 @@ type version struct {
 }
 
 func main() {
-	config := parseFlags()
+	// config := parseFlags()
+
+	p := tea.NewProgram(initialModel())
+	if err := p.Start(); err != nil {
+		fmt.Print(err)
+	}
+
+	/*
 	if config.version {
 		version := getVersion()
 		dirty := ""
@@ -103,6 +163,7 @@ func main() {
 			fmt.Println()
 		}
 	}
+	 */
 }
 
 func contains(s []string, str string) bool {
