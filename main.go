@@ -101,6 +101,7 @@ func main() {
 				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
 				fmt.Printf(communityScoreMessage)
 			}
+			println()
 		}
 	}
 }
