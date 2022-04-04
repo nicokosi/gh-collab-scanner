@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
+	// "os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/cli/go-gh"
 )
 
@@ -30,6 +31,58 @@ func parseFlags() config {
 	version := flag.Bool("version", false, "Output version-related information")
 	flag.Parse()
 	return config{*repo, *org, *user, *page, *verbose, *version}
+}
+
+type model struct {
+	repos []repo
+}
+
+func initialModel() model {
+	return model{
+		repos: []repo{},
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	// Is it a key press?
+	case tea.KeyMsg:
+
+		// Cool, what was the actual key pressed?
+		switch msg.String() {
+
+		// These keys should exit the program.
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		}
+	}
+
+	// Return the updated model to the Bubble Tea runtime for processing.
+	// Note that we're not returning a command.
+	return m, nil
+}
+
+func (m model) View() string {
+	// The header
+	s := "Hello 👋\n\n"
+
+	// Iterate over our choices
+	for _, repo := range m.repos {
+
+		// Render the row
+		s += fmt.Sprintf("Repo %s \n", repo.Name)
+	}
+
+	// The footer
+	s += "\nPress q to quit.\n"
+
+	// Send the UI for rendering
+	return s
 }
 
 type owner struct{ Login string }
@@ -55,54 +108,60 @@ type version struct {
 }
 
 func main() {
-	config := parseFlags()
-	if config.version {
-		version := getVersion()
-		dirty := ""
-		if version.dirty {
-			dirty = "(dirty)"
-		}
-		fmt.Printf("Commit %s (%s) %s\n", version.commit, version.date, dirty)
-	} else if len(config.org) > 0 || len(config.user) > 0 {
-		repos := []repo{}
-		repos, error := getRepos(config)
-		if error != nil {
-			fmt.Print(error)
-			os.Exit(2)
-		}
-		for _, repo := range repos {
-			repoMessage, repo, validRepo := scanRepo(config, repo.Full_name)
-			if validRepo {
-				fmt.Printf(repoMessage)
-				collaboratorsMessage := scanCollaborators(config, repo.Full_name)
-				fmt.Printf(collaboratorsMessage)
-				if strings.Compare(repo.Visibility, "public") == 0 {
-					communityScoreMessage := scanCommunityScore(config, repo.Full_name)
-					fmt.Printf(communityScoreMessage)
-				}
-			}
-			println()
-		}
-	} else {
-		repoWithOrg, error := getRepo(config)
-		if error != nil {
-			fmt.Print(error)
-			if strings.Contains(error.Error(), "none of the git remotes configured for this repository point to a known GitHub host") {
-				print("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
-			}
-			os.Exit(1)
-		}
-		repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
-		if validRepo {
-			fmt.Printf(repoMessage)
-			collaboratorsMessage := scanCollaborators(config, repoWithOrg)
-			fmt.Printf(collaboratorsMessage)
-			if !repo.Fork && strings.Compare(repo.Visibility, "public") == 0 {
-				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
-				fmt.Printf(communityScoreMessage)
-			}
-		}
+	// config := parseFlags()
+
+	p := tea.NewProgram(initialModel())
+	if err := p.Start(); err != nil {
+		fmt.Print(err)
 	}
+
+	// if config.version {
+	// 	version := getVersion()
+	// 	dirty := ""
+	// 	if version.dirty {
+	// 		dirty = "(dirty)"
+	// 	}
+	// 	fmt.Printf("Commit %s (%s) %s\n", version.commit, version.date, dirty)
+	// } else if len(config.org) > 0 || len(config.user) > 0 {
+	// 	repos := []repo{}
+	// 	repos, error := getRepos(config)
+	// 	if error != nil {
+	// 		fmt.Print(error)
+	// 		os.Exit(2)
+	// 	}
+	// 	for _, repo := range repos {
+	// 		repoMessage, repo, validRepo := scanRepo(config, repo.Full_name)
+	// 		if validRepo {
+	// 			fmt.Printf(repoMessage)
+	// 			collaboratorsMessage := scanCollaborators(config, repo.Full_name)
+	// 			fmt.Printf(collaboratorsMessage)
+	// 			if strings.Compare(repo.Visibility, "public") == 0 {
+	// 				communityScoreMessage := scanCommunityScore(config, repo.Full_name)
+	// 				fmt.Printf(communityScoreMessage)
+	// 			}
+	// 		}
+	// 		println()
+	// 	}
+	// } else {
+	// 	repoWithOrg, error := getRepo(config)
+	// 	if error != nil {
+	// 		fmt.Print(error)
+	// 		if strings.Contains(error.Error(), "none of the git remotes configured for this repository point to a known GitHub host") {
+	// 			print("If current folder is related to a GitHub repository, please check 'gh auth status' and 'gh config list'.")
+	// 		}
+	// 		os.Exit(1)
+	// 	}
+	// 	repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
+	// 	if validRepo {
+	// 		fmt.Printf(repoMessage)
+	// 		collaboratorsMessage := scanCollaborators(config, repoWithOrg)
+	// 		fmt.Printf(collaboratorsMessage)
+	// 		if !repo.Fork && strings.Compare(repo.Visibility, "public") == 0 {
+	// 			communityScoreMessage := scanCommunityScore(config, repoWithOrg)
+	// 			fmt.Printf(communityScoreMessage)
+	// 		}
+	// 	}
+	// }
 }
 
 func getRepos(config config) ([]repo, error) {
