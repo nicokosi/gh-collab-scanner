@@ -76,6 +76,25 @@ func TestGetRepos_no_user_nor_org(t *testing.T) {
 	assert.Nil(t, error)
 }
 
+func TestScanRepo_Org(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/repos/acme/buzz/readme").
+		Reply(200).
+		JSON(map[string]string{"name": "buzz"})
+	gock.New("https://api.github.com").
+		Get("/repos/acme/buzz").
+		Reply(200).
+		File("test_repo.json")
+
+	message, repository, validRepo := scanRepo(config{org: "acme"}, "acme/buzz")
+
+	assert.True(t, validRepo)
+	assert.Equal(t, repo{Name: "buzz", Owner: owner{Login: "Coyote"}, Description: "Beep, beep", Topics: []string{"old", "cartoon"}, Visibility: "public"}, repository)
+	assert.Equal(t, "acme/buzz: README ☑️, topics ☑️, ", message)
+}
+
 func TestScanRepo_Verbose(t *testing.T) {
 	defer gock.Off()
 	defer gock.DisableNetworking()
