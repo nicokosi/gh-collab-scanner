@@ -162,7 +162,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 	if config.verbose {
 		message += repoWithOrg + " has: "
 	}
-	if !config.verbose && (len(config.repo) > 1 || len(config.user) > 1) {
+	if !config.verbose && (len(config.repo) > 1 || len(config.user) > 1 || len(config.org) > 1) {
 		message += repoWithOrg + ": "
 	}
 	if len(readme.Name) > 0 {
