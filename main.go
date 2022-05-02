@@ -44,9 +44,7 @@ type repo struct {
 	Fork        bool
 }
 
-type collaborator struct {
-	login string
-}
+type collaborator struct{}
 
 type version struct {
 	commit string
@@ -64,7 +62,6 @@ func main() {
 		}
 		fmt.Printf("Commit %s (%s) %s\n", version.commit, version.date, dirty)
 	} else if len(config.org) > 0 || len(config.user) > 0 {
-		repos := []repo{}
 		repos, error := getRepos(config)
 		if error != nil {
 			fmt.Print(error)
@@ -73,12 +70,12 @@ func main() {
 		for _, repo := range repos {
 			repoMessage, repo, validRepo := scanRepo(config, repo.Full_name)
 			if validRepo {
-				fmt.Printf(repoMessage)
+				fmt.Print(repoMessage)
 				collaboratorsMessage := scanCollaborators(config, repo.Full_name)
-				fmt.Printf(collaboratorsMessage)
+				fmt.Print(collaboratorsMessage)
 				if strings.Compare(repo.Visibility, "public") == 0 {
 					communityScoreMessage := scanCommunityScore(config, repo.Full_name)
-					fmt.Printf(communityScoreMessage)
+					fmt.Print(communityScoreMessage)
 				}
 			}
 			println()
@@ -94,12 +91,12 @@ func main() {
 		}
 		repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
 		if validRepo {
-			fmt.Printf(repoMessage)
+			fmt.Print(repoMessage)
 			collaboratorsMessage := scanCollaborators(config, repoWithOrg)
-			fmt.Printf(collaboratorsMessage)
+			fmt.Print(collaboratorsMessage)
 			if !repo.Fork && strings.Compare(repo.Visibility, "public") == 0 {
 				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
-				fmt.Printf(communityScoreMessage)
+				fmt.Print(communityScoreMessage)
 			}
 			println()
 		}
