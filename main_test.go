@@ -23,7 +23,7 @@ func TestScanRepo(t *testing.T) {
 
 	assert.True(t, validRepo)
 	assert.Equal(t, repo{Name: "buzz", Owner: owner{Login: "Coyote"}, Description: "Beep, beep", Topics: []string{"old", "cartoon"}, Visibility: "public"}, repository)
-	assert.Equal(t, "acme/buzz: README ☑️, topics ☑️, ", message)
+	assert.Equal(t, "acme/buzz: README ☑️, description ☑️, topics ☑️, ", message)
 }
 
 func TestGetRepos_for_org(t *testing.T) {
@@ -92,7 +92,7 @@ func TestScanRepo_Org(t *testing.T) {
 
 	assert.True(t, validRepo)
 	assert.Equal(t, repo{Name: "buzz", Owner: owner{Login: "Coyote"}, Description: "Beep, beep", Topics: []string{"old", "cartoon"}, Visibility: "public"}, repository)
-	assert.Equal(t, "acme/buzz: README ☑️, topics ☑️, ", message)
+	assert.Equal(t, "acme/buzz: README ☑️, description ☑️, topics ☑️, ", message)
 }
 
 func TestScanRepo_Verbose(t *testing.T) {
@@ -111,7 +111,7 @@ func TestScanRepo_Verbose(t *testing.T) {
 
 	assert.True(t, validRepo)
 	assert.Equal(t, repo{Name: "buzz", Owner: owner{Login: "Coyote"}, Description: "Beep, beep", Topics: []string{"old", "cartoon"}, Visibility: "public"}, repository)
-	assert.Equal(t, "acme/buzz has: \n  - a README ☑️\n  - topics ☑️", message)
+	assert.Equal(t, "acme/buzz has: \n  - a README ☑️\n  - a description ☑️\n  - topics ☑️", message)
 }
 
 func TestScanRepo_Verbose_ReadmeError(t *testing.T) {
@@ -129,7 +129,7 @@ func TestScanRepo_Verbose_ReadmeError(t *testing.T) {
 
 	assert.True(t, validRepo)
 	assert.Equal(t, repo{Name: "buzz", Owner: owner{Login: "Coyote"}, Description: "Beep, beep", Topics: []string{"old", "cartoon"}, Visibility: "public"}, repository)
-	assert.Equal(t, "acme/buzz has: \n  - topics ☑️", message)
+	assert.Equal(t, "acme/buzz has: \n  - a description ☑️\n  - topics ☑️", message)
 }
 
 func TestScanRepo_Verbose_RepoError(t *testing.T) {

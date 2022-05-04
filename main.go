@@ -194,6 +194,19 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 		fmt.Print(errRepo)
 		return
 	}
+	if len(repo.Description) > 0 {
+		if config.verbose {
+			message += "\n  - a description ☑️"
+		} else {
+			message += "description ☑️, "
+		}
+	} else {
+		if config.verbose {
+			message += "\n  - no description 😇"
+		} else {
+			message += "no description 😇, "
+		}
+	}
 	if len(repo.Topics) > 0 {
 		if config.verbose {
 			message += "\n  - topics ☑️"
