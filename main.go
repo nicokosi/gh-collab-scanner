@@ -245,13 +245,13 @@ func scanCollaborators(config config, repoWithOrg string) string {
 		if config.verbose {
 			message += fmt.Sprintf("\n  - %d collaborator 👤", len(collaborators))
 		} else {
-			message += fmt.Sprintf("%d collaborator 👤", len(collaborators))
+			message += fmt.Sprintf("%d collaborator 👤, ", len(collaborators))
 		}
 	} else {
 		if config.verbose {
 			message += fmt.Sprintf("\n  - %d collaborators 👥", len(collaborators))
 		} else {
-			message += fmt.Sprintf("%d collaborators 👥", len(collaborators))
+			message += fmt.Sprintf("%d collaborators 👥, ", len(collaborators))
 		}
 	}
 	return message
