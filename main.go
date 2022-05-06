@@ -23,14 +23,13 @@ type config struct {
 }
 
 func parseFlags() config {
-	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted and no 'org' nor 'user' flag")
-	org := flag.String("org", "", "a optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repo for current folder if omitted and no 'repo' nor 'user' flag")
-	user := flag.String("user", "", "a optional GitHub user (i.e. 'torvalds') to scan the repositories from (100 max); use repo for current folder if omitted and no 'repo' nor 'org' flag")
-	topic := flag.String("topic", "", "an optional GitHub topic (i.e. 'testing') to filter the repositories ; ignored if no '--user' nor '--org' flag")
-
-	page := flag.Int("page", 1, "Page number for 'repo' and 'user' flags, 100 repositories per page")
-	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
-	version := flag.Bool("version", false, "Output version-related information")
+	org := flag.String("org", "", "an optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repository for current folder if omitted and no '-repo' nor '-user' flag")
+	page := flag.Int("page", 1, "page number for '-repo' and '-user' flags, 100 repositories per page")
+	repo := flag.String("repo", "", "an optional GitHub repository (i.e. 'python/peps') ; use repository for current folder if omitted and no '-org' nor '-user' flag")
+	topic := flag.String("topic", "", "an optional GitHub topic (i.e. 'testing') to filter the repositories ; ignored if no '-user' nor '-org' flag")
+	user := flag.String("user", "", "an optional GitHub user (i.e. 'torvalds') to scan the repositories from (100 max) ; use repository for current folder if omitted and no '-repo' nor '-org' flag")
+	verbose := flag.Bool("verbose", false, "verbose mode outputs several lines per repository ; non-verbose mode outputs a one-liner per repository ; default: false")
+	version := flag.Bool("version", false, "outputs version-related information")
 	flag.Parse()
 	return config{*repo, *org, *user, *topic, *page, *verbose, *version}
 }
