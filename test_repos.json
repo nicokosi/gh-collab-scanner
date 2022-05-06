@@ -1,7 +1,11 @@
 [
     {
-        "fullName": "Bug Bunny"
-    },
+        "fullName": "Bug Bunny",
+        "topics": [
+            "rabbit",
+            "cartoon"
+          ]
+        },
     {
         "fullName": "Coyote"
     }

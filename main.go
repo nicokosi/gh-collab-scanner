@@ -16,6 +16,7 @@ type config struct {
 	repo    string
 	org     string
 	user    string
+	topic   string
 	page    int
 	verbose bool
 	version bool
@@ -25,11 +26,13 @@ func parseFlags() config {
 	repo := flag.String("repo", "", "a optional GitHub repository (i.e. 'python/peps') ; use repo for current folder if omitted and no 'org' nor 'user' flag")
 	org := flag.String("org", "", "a optional GitHub organization (i.e. 'python') to scan the repositories from (100 max) ; use repo for current folder if omitted and no 'repo' nor 'user' flag")
 	user := flag.String("user", "", "a optional GitHub user (i.e. 'torvalds') to scan the repositories from (100 max); use repo for current folder if omitted and no 'repo' nor 'org' flag")
+	topic := flag.String("topic", "", "an optional GitHub topic (i.e. 'testing') to filter the repositories ; ignored if no '--user' nor '--org' flag")
+
 	page := flag.Int("page", 1, "Page number for 'repo' and 'user' flags, 100 repositories per page")
 	verbose := flag.Bool("verbose", false, "mode that outputs several lines (otherwise, outputs a one-liner) ; default: false")
 	version := flag.Bool("version", false, "Output version-related information")
 	flag.Parse()
-	return config{*repo, *org, *user, *page, *verbose, *version}
+	return config{*repo, *org, *user, *topic, *page, *verbose, *version}
 }
 
 type owner struct{ Login string }
@@ -103,6 +106,16 @@ func main() {
 	}
 }
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 func getRepos(config config) ([]repo, error) {
 	if len(config.org) == 0 && len(config.user) == 0 {
 		return []repo{}, nil
@@ -118,15 +131,28 @@ func getRepos(config config) ([]repo, error) {
 		err = client.Get(
 			"orgs/"+config.org+"/repos?sort=full_name&per_page=100&page="+strconv.Itoa(config.page),
 			&repos)
-		return repos, err
+		return reposWithTopic(repos, config.topic), err
 	} else {
 		// https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user
 		repos := []repo{}
 		err = client.Get(
 			"users/"+config.user+"/repos?sort=full_name&per_page=100&page="+strconv.Itoa(config.page),
 			&repos)
-		return repos, err
+		return reposWithTopic(repos, config.topic), err
 	}
+}
+
+func reposWithTopic(repos []repo, topic string) []repo {
+	if len(topic) > 0 {
+		filtered := []repo{}
+		for _, repo := range repos {
+			if contains(repo.Topics, topic) {
+				filtered = append(filtered, repo)
+			}
+		}
+		return filtered
+	}
+	return repos
 }
 
 func getRepo(config config) (string, error) {

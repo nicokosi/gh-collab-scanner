@@ -36,7 +36,35 @@ func TestGetRepos_for_org(t *testing.T) {
 
 	repositories, error := getRepos(config{org: "acme"})
 
-	assert.NotEmpty(t, repositories)
+	assert.Len(t, repositories, 2)
+	assert.Nil(t, error)
+}
+
+func TestGetRepos_for_org_with_topic(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/orgs/acme/repos").
+		Reply(200).
+		File("test_repos.json")
+
+	repositories, error := getRepos(config{org: "acme", topic: "rabbit"})
+
+	assert.Len(t, repositories, 1)
+	assert.Nil(t, error)
+}
+
+func TestGetRepos_for_org_with_missing_topic(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/orgs/acme/repos").
+		Reply(200).
+		File("test_repos.json")
+
+	repositories, error := getRepos(config{org: "acme", topic: "does-not-exist"})
+
+	assert.Empty(t, repositories)
 	assert.Nil(t, error)
 }
 
@@ -50,7 +78,35 @@ func TestGetRepos_for_user(t *testing.T) {
 
 	repositories, error := getRepos(config{user: "acme"})
 
-	assert.NotEmpty(t, repositories)
+	assert.Len(t, repositories, 2)
+	assert.Nil(t, error)
+}
+
+func TestGetRepos_for_user_with_topic(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/users/acme/repos").
+		Reply(200).
+		File("test_repos.json")
+
+	repositories, error := getRepos(config{user: "acme", topic: "rabbit"})
+
+	assert.Len(t, repositories, 1)
+	assert.Nil(t, error)
+}
+
+func TestGetRepos_for_user_with_missing_topic(t *testing.T) {
+	defer gock.Off()
+	defer gock.DisableNetworking()
+	gock.New("https://api.github.com").
+		Get("/users/acme/repos").
+		Reply(200).
+		File("test_repos.json")
+
+	repositories, error := getRepos(config{user: "acme", topic: "does-not-exist"})
+
+	assert.Empty(t, repositories)
 	assert.Nil(t, error)
 }
 
