@@ -80,7 +80,7 @@ func main() {
 					fmt.Print(communityScoreMessage)
 				}
 			}
-			println()
+			fmt.Println()
 		}
 	} else {
 		repoWithOrg, error := getRepo(config)
@@ -100,7 +100,7 @@ func main() {
 				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
 				fmt.Print(communityScoreMessage)
 			}
-			println()
+			fmt.Println()
 		}
 	}
 }
