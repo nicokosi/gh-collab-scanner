@@ -3,17 +3,57 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 
-	// "os"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/cli/go-gh"
 )
+
+const listHeight = 14
+
+var (
+	titleStyle        = lipgloss.NewStyle().MarginLeft(2)
+	itemStyle         = lipgloss.NewStyle().PaddingLeft(4)
+	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
+	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4).PaddingBottom(1)
+	quitTextStyle     = lipgloss.NewStyle().Margin(1, 0, 2, 4)
+)
+
+type item string
+
+func (i item) FilterValue() string { return "" }
+
+type itemDelegate struct{}
+
+func (d itemDelegate) Height() int                               { return 1 }
+func (d itemDelegate) Spacing() int                              { return 0 }
+func (d itemDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd { return nil }
+func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	i, ok := listItem.(item)
+	if !ok {
+		return
+	}
+
+	str := fmt.Sprintf("%d. %s", index+1, i)
+
+	fn := itemStyle.Render
+	if index == m.Index() {
+		fn = func(s string) string {
+			return selectedItemStyle.Render("> " + s)
+		}
+	}
+
+	fmt.Fprintf(w, fn(str))
+}
 
 type config struct {
 	repo    string
@@ -38,13 +78,28 @@ func parseFlags() config {
 }
 
 type model struct {
+	list    list.Model
 	spinner spinner.Model
 	repos   []repo
 }
 
 func initialModel() model {
 	s := spinner.New()
+	items := []list.Item{
+		item("Ramen"),
+		item("Tomato Soup"),
+		item("Hamburgers"),
+	}
+	const defaultWidth = 20
+	l := list.New(items, itemDelegate{}, defaultWidth, listHeight)
+	l.Title = "What do you want for dinner?"
+	l.SetShowStatusBar(false)
+	l.SetFilteringEnabled(false)
+	l.Styles.Title = titleStyle
+	l.Styles.PaginationStyle = paginationStyle
+	l.Styles.HelpStyle = helpStyle
 	return model{
+		list:    l,
 		spinner: s,
 		repos:   []repo{},
 	}
@@ -74,6 +129,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	default:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
+		m.list, cmd = m.list.Update(msg)
 		return m, cmd
 	}
 }
@@ -118,6 +174,7 @@ type version struct {
 
 func main() {
 	// config := parseFlags()
+	const defaultWidth = 20
 
 	p := tea.NewProgram(initialModel())
 	if err := p.Start(); err != nil {
