@@ -1,6 +1,6 @@
 module github.com/nicokosi/gh-collab-scanner
 
-go 1.18
+go 1.19
 
 require github.com/cli/go-gh v0.0.3
 
