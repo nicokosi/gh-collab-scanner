@@ -3,7 +3,7 @@ module github.com/nicokosi/gh-collab-scanner
 go 1.19
 
 require (
-	github.com/cli/go-gh v1.2.0
+	github.com/cli/go-gh v1.2.1
 	github.com/stretchr/testify v1.8.2
 	gopkg.in/h2non/gock.v1 v1.1.2
 )
