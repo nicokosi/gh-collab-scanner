@@ -4,13 +4,14 @@ go 1.19
 
 require (
 	github.com/cli/go-gh v1.2.1
+	github.com/cli/go-gh/v2 v2.0.0
 	github.com/stretchr/testify v1.8.2
 	gopkg.in/h2non/gock.v1 v1.1.2
 )
 
 require (
 	github.com/cli/safeexec v1.0.0 // indirect
-	github.com/cli/shurcooL-graphql v0.0.2 // indirect
+	github.com/cli/shurcooL-graphql v0.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
 	github.com/henvic/httpretty v0.0.6 // indirect
