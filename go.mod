@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/cli/go-gh v1.2.1
-	github.com/cli/go-gh/v2 v2.0.1
+	github.com/cli/go-gh/v2 v2.1.0
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/h2non/gock.v1 v1.1.2
 )
