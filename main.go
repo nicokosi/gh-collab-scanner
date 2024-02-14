@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cli/go-gh"
+	"github.com/cli/go-gh/v2/pkg/api"
+	"github.com/cli/go-gh/v2/pkg/repository"
 )
 
 type config struct {
@@ -119,7 +120,7 @@ func getRepos(config config) ([]repo, error) {
 	if len(config.org) == 0 && len(config.user) == 0 {
 		return []repo{}, nil
 	}
-	client, err := gh.RESTClient(nil)
+	client, err := api.DefaultRESTClient()
 	if err != nil {
 		fmt.Print(err)
 		return []repo{}, err
@@ -161,11 +162,11 @@ func getRepo(config config) (string, error) {
 	if config.verbose {
 		fmt.Printf("(current repo)\n")
 	}
-	currentRepo, error := gh.CurrentRepository()
+	currentRepo, error := repository.Current()
 	if error != nil {
 		return "", error
 	}
-	return currentRepo.Owner() + "/" + currentRepo.Name(), nil
+	return currentRepo.Owner + "/" + currentRepo.Name, nil
 }
 
 func scanRepo(config config, repoWithOrg string) (message string, repository repo, validRepo bool) {
@@ -173,7 +174,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 	readme := struct {
 		Name string
 	}{}
-	client, err := gh.RESTClient(nil)
+	client, err := api.DefaultRESTClient()
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -250,7 +251,7 @@ func scanRepo(config config, repoWithOrg string) (message string, repository rep
 
 func scanCollaborators(config config, repoWithOrg string) string {
 	// https://docs.github.com/en/rest/reference/collaborators#list-repository-collaborators
-	client, err := gh.RESTClient(nil)
+	client, err := api.DefaultRESTClient()
 	if err != nil {
 		fmt.Print(err)
 		return ""
@@ -287,7 +288,7 @@ func scanCommunityScore(config config, repoWithOrg string) string {
 	communityProfile := struct {
 		Health_percentage int64
 	}{}
-	client, err := gh.RESTClient(nil)
+	client, err := api.DefaultRESTClient()
 	if err != nil {
 		fmt.Print(err)
 		return ""
