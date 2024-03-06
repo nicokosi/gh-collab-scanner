@@ -2,8 +2,6 @@ module github.com/nicokosi/gh-collab-scanner
 
 go 1.21
 
-toolchain go1.22.0
-
 require (
 	github.com/cli/go-gh/v2 v2.5.0
 	github.com/stretchr/testify v1.9.0
