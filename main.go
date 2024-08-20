@@ -370,9 +370,12 @@ func scanCommunityScore(config config, repoWithOrg string) string {
 	err = client.Get(
 		"repos/"+repoWithOrg+"/community/profile",
 		&communityProfile)
-	if err != nil {
-		fmt.Print(err)
-		return ""
+	if err != nil && len(err.Error()) > 0 {
+		if strings.HasPrefix(err.Error(), "HTTP 404") {
+			// 🤫
+		} else {
+			fmt.Print(err)
+		}
 	}
 	message := ""
 	if config.verbose {
