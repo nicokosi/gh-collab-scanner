@@ -9,6 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/cli/go-gh/v2/pkg/repository"
 )
@@ -55,8 +58,46 @@ type version struct {
 	dirty  bool
 }
 
+var baseStyle = lipgloss.NewStyle().
+	BorderStyle(lipgloss.NormalBorder()).
+	BorderForeground(lipgloss.Color("240"))
+
+type model struct {
+	table table.Model
+}
+
+func (m model) Init() tea.Cmd { return nil }
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			if m.table.Focused() {
+				m.table.Blur()
+			} else {
+				m.table.Focus()
+			}
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		case "enter":
+			return m, tea.Batch(
+				tea.Printf("Let's go to %s!", m.table.SelectedRow()[1]),
+			)
+		}
+	}
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
+}
+
+func (m model) View() string {
+	return baseStyle.Render(m.table.View()) + "\n"
+}
+
 func main() {
 	config := parseFlags()
+	var rows []table.Row
 	if config.version {
 		version := getVersion()
 		dirty := ""
@@ -70,20 +111,23 @@ func main() {
 			fmt.Print(error)
 			os.Exit(2)
 		}
-		for _, repo := range repos {
+		rows = make([]table.Row, len(repos))
+		for i, repo := range repos {
 			repoMessage, repo, validRepo := scanRepo(config, repo.Full_name)
 			if validRepo {
-				fmt.Print(repoMessage)
+				var message string
+				message += repoMessage
 				collaboratorsMessage := scanCollaborators(config, repo.Full_name)
-				fmt.Print(collaboratorsMessage)
+				message += collaboratorsMessage
 				if strings.Compare(repo.Visibility, "public") == 0 {
 					communityScoreMessage := scanCommunityScore(config, repo.Full_name)
-					fmt.Print(communityScoreMessage)
+					message += communityScoreMessage
 				}
+				rows[i] = table.Row{repo.Full_name, message}
 			}
-			fmt.Println()
 		}
 	} else {
+		rows = make([]table.Row, 1)
 		repoWithOrg, error := getRepo(config)
 		if error != nil {
 			fmt.Print(error)
@@ -94,15 +138,45 @@ func main() {
 		}
 		repoMessage, repo, validRepo := scanRepo(config, repoWithOrg)
 		if validRepo {
-			fmt.Print(repoMessage)
+			var message string
+			message += repoMessage
 			collaboratorsMessage := scanCollaborators(config, repoWithOrg)
-			fmt.Print(collaboratorsMessage)
+			message += collaboratorsMessage
 			if !repo.Fork && strings.Compare(repo.Visibility, "public") == 0 {
 				communityScoreMessage := scanCommunityScore(config, repoWithOrg)
-				fmt.Print(communityScoreMessage)
+				message += communityScoreMessage
 			}
-			fmt.Println()
+			rows[0] = table.Row{repo.Full_name, message}
 		}
+	}
+
+	columns := []table.Column{
+		{Title: "Repository", Width: 40},
+		{Title: "Scan", Width: 100},
+	}
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(2),
+	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Bold(false)
+	t.SetStyles(s)
+
+	m := model{t}
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
 	}
 }
 
@@ -296,9 +370,12 @@ func scanCommunityScore(config config, repoWithOrg string) string {
 	err = client.Get(
 		"repos/"+repoWithOrg+"/community/profile",
 		&communityProfile)
-	if err != nil {
-		fmt.Print(err)
-		return ""
+	if err != nil && len(err.Error()) > 0 {
+		if strings.HasPrefix(err.Error(), "HTTP 404") {
+			// 🤫
+		} else {
+			fmt.Print(err)
+		}
 	}
 	message := ""
 	if config.verbose {
