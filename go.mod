@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/cli/go-gh/v2 v2.11.2
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/h2non/gock.v1 v1.1.2
 )
 
