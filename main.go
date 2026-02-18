@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -106,16 +107,6 @@ func main() {
 	}
 }
 
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-
-	return false
-}
-
 func getRepos(config config) ([]repo, error) {
 	if len(config.org) == 0 && len(config.user) == 0 {
 		return []repo{}, nil
@@ -146,7 +137,7 @@ func reposWithTopic(repos []repo, topic string) []repo {
 	if len(topic) > 0 {
 		filtered := []repo{}
 		for _, repo := range repos {
-			if contains(repo.Topics, topic) {
+			if slices.Contains(repo.Topics, topic) {
 				filtered = append(filtered, repo)
 			}
 		}
