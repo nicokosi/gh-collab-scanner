@@ -53,8 +53,6 @@ gh-collab-scanner --help
 
 ## Develop 🧑‍💻
 
-Requires Go 1.18 or later.
-
 ### Build from source code 🧑‍💻▶️
 
 Build then run:
