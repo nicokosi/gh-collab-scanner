@@ -6,7 +6,7 @@ toolchain go1.26.6
 
 require (
 	github.com/cli/go-gh/v2 v2.13.0
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	gopkg.in/h2non/gock.v1 v1.1.2
 )
 
