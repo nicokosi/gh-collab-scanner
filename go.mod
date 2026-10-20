@@ -2,7 +2,7 @@ module github.com/nicokosi/gh-collab-scanner
 
 go 1.25.0
 
-toolchain go1.27.2
+toolchain go1.27.3
 
 require (
 	github.com/cli/go-gh/v2 v2.13.0
